@@ -6,6 +6,8 @@ import models
 import schemas
 from database import get_db
 
+from datetime import date
+
 app = FastAPI(title="Smart Maintenance QR API")
 
 
@@ -57,3 +59,27 @@ def listar_eventos(db: Session = Depends(get_db)):
 @app.get("/maquinas/{maquina_id}/eventos", response_model=list[schemas.EventoResponse])
 def eventos_de_maquina(maquina_id: int, db: Session = Depends(get_db)):
     return db.query(models.Evento).filter(models.Evento.maquina_id == maquina_id).all()
+
+
+
+
+# ---------- CUADERNO DE TURNO ----------
+
+@app.get("/cuaderno-turno", response_model=list[schemas.EventoResponse])
+def cuaderno_turno(
+    turno: str | None = None,
+    fecha: date | None = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(models.Evento)
+
+    if turno:
+        query = query.filter(models.Evento.turno == turno)
+
+    if fecha:
+        query = query.filter(
+            models.Evento.fecha_hora >= datetime.combine(fecha, datetime.min.time()),
+            models.Evento.fecha_hora < datetime.combine(fecha, datetime.max.time())
+        )
+
+    return query.order_by(models.Evento.fecha_hora.desc()).all()

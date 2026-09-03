@@ -83,3 +83,33 @@ def cuaderno_turno(
         )
 
     return query.order_by(models.Evento.fecha_hora.desc()).all()
+
+# ---------- REPUESTOS ----------
+
+@app.post("/repuestos", response_model=schemas.RepuestoResponse)
+def crear_repuesto(repuesto: schemas.RepuestoCreate, db: Session = Depends(get_db)):
+    nuevo_repuesto = models.Repuesto(**repuesto.model_dump())
+    db.add(nuevo_repuesto)
+    db.commit()
+    db.refresh(nuevo_repuesto)
+    return nuevo_repuesto
+
+@app.get("/repuestos", response_model=list[schemas.RepuestoResponse])
+def listar_repuestos(db: Session = Depends(get_db)):
+    return db.query(models.Repuesto).all()
+
+
+@app.get("/maquinas/{maquina_id}/repuestos", response_model=list[schemas.RepuestoResponse])
+def repuestos_de_maquina(maquina_id: int, db: Session = Depends(get_db)):
+    return db.query(models.Repuesto).filter(models.Repuesto.maquina_id == maquina_id).all()
+
+@app.patch("/repuestos/{repuesto_id}/stock", response_model=schemas.RepuestoResponse)
+def actualizar_stock(repuesto_id: int, datos: schemas.RepuestoStockUpdate, db: Session = Depends(get_db)):
+    repuesto = db.query(models.Repuesto).filter(models.Repuesto.id == repuesto_id).first()
+    if not repuesto:
+        raise HTTPException(status_code=404, detail="Repuesto no encontrado")
+
+    repuesto.stock_actual = datos.stock_actual
+    db.commit()
+    db.refresh(repuesto)
+    return repuesto

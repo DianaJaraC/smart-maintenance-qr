@@ -32,3 +32,20 @@ class EventoResponse(EventoCreate):
 
     class Config:
         from_attributes = True
+
+class RepuestoCreate(BaseModel):
+    nombre: str
+    maquina_id: int
+    ubicacion_almacen: Optional[str] = None
+    stock_actual: int = 0
+    stock_minimo: int = 0
+
+
+class RepuestoResponse(RepuestoCreate):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+class RepuestoStockUpdate(BaseModel):
+    stock_actual: int
